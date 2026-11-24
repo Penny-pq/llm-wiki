@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>從零認識 LLM｜教學簡報</title>
+<style>
+:root{--bg:#0b1020;--panel:#141d33;--ink:#eef3ff;--muted:#aab7d2;--accent:#7dd3fc;--accent2:#c4b5fd}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 10%,#1c2c50 0,transparent 34%),var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif}
+.deck{min-height:100vh;display:flex;flex-direction:column}.top{display:flex;justify-content:space-between;align-items:center;padding:18px 5vw;color:var(--muted);font-size:14px}
+main{width:min(1000px,90vw);margin:auto;display:flex;align-items:center;min-height:70vh}
+.slide{display:none;width:100%;padding:clamp(24px,5vw,60px);border:1px solid #344260;border-radius:28px;background:linear-gradient(145deg,rgba(24,36,62,.96),rgba(14,22,40,.96));box-shadow:0 25px 80px #0005}
+.slide.active{display:block;animation:fade .35s ease}@keyframes fade{from{opacity:.25;transform:translateY(10px)}to{opacity:1;transform:none}}
+.kicker{color:var(--accent);font-weight:700;letter-spacing:.12em;font-size:13px;text-transform:uppercase}
+h1{font-size:clamp(38px,7vw,72px);line-height:1.12;margin:18px 0}h2{font-size:clamp(28px,4vw,44px);margin:12px 0 24px}
+p,li{font-size:clamp(17px,2vw,21px);line-height:1.75;color:#dbe5fa}ul{padding-left:1.3em}
+.lead{font-size:clamp(20px,2.6vw,28px);color:#c8d8f5;max-width:780px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:22px}
+.tile{background:#202d49;border:1px solid #3c4d70;padding:18px;border-radius:18px}.tile b{display:block;color:var(--accent2);font-size:19px;margin-bottom:8px}.tile p{font-size:16px;margin:0}
+.callout{border-left:4px solid var(--accent);background:#1d2b46;padding:16px 20px;border-radius:0 14px 14px 0;margin:22px 0;color:#e6f1ff;font-size:18px;line-height:1.7}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:28px 0}.flow span{background:#263754;border:1px solid #496184;padding:13px 16px;border-radius:12px;font-weight:650}.flow i{color:var(--accent);font-style:normal}
+.footer{width:min(1000px,90vw);margin:0 auto;padding:18px 0 28px;display:flex;justify-content:space-between;align-items:center;color:var(--muted)}
+button{background:#263754;color:white;border:1px solid #50658b;border-radius:999px;padding:11px 20px;font-size:15px;cursor:pointer}button:hover{background:#385078}button:disabled{opacity:.35;cursor:not-allowed}
+.progress{height:4px;background:#26334e}.bar{height:4px;width:10%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .25s}
+.small{font-size:14px;color:var(--muted)}a{color:var(--accent)}.big-number{font-size:clamp(50px,9vw,90px);font-weight:800;color:var(--accent2)}
+@media(max-width:600px){.top{padding:14px 5vw}.slide{padding:24px}.footer{gap:8px;flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="deck">
+ <div class="top"><span>入門教學｜人工智慧</span><span>使用方向鍵 ← → 切換</span></div>
+ <div class="progress"><div class="bar" id="bar"></div></div>
+ <main>
+  <section class="slide active">
+   <div class="kicker">A beginner's guide</div>
+   <h1>從零認識<br><span style="color:#7dd3fc">大型語言模型</span></h1>
+   <p class="lead">LLM 如何把文字轉成模型能處理的形式，又如何一步步生成回答？</p>
+   <div class="callout">先建立一個觀念：LLM 很擅長生成語言，但「說得流暢」不代表「內容一定正確」。</div>
+   <p class="small">本簡報以本專案 LLM Wiki 為知識來源。</p>
+  </section>
+  <section class="slide">
+   <div class="kicker">01｜基本概念</div><h2>LLM 是什麼？</h2>
+   <p>大型語言模型（Large Language Model, LLM）是一種從大量資料中學習語言模式，並根據上下文預測 token 序列的模型。</p>
+   <div class="grid">
+    <div class="tile"><b>大量資料</b><p>讓模型接觸多樣的語言用法與資訊模式。</p></div>
+    <div class="tile"><b>大量參數</b><p>參數是模型在訓練中調整的數值，用來表示學到的模式。</p></div>
+    <div class="tile"><b>上下文</b><p>模型會利用前後文，判斷接下來較可能出現什麼。</p></div>
+   </div>
+   <div class="callout">想像句子：「下雨了，出門記得帶……」模型會根據上下文評估「雨傘」等接續內容的可能性。</div>
+  </section>
+  <section class="slide">
+   <div class="kicker">02｜文字如何進入模型</div><h2>Token、Tokenizer、Embedding</h2>
+   <div class="flow"><span>文字</span><i>→</i><span>Tokenizer</span><i>→</i><span>Token ID</span><i>→</i><span>Embedding</span></div>
+   <div class="grid">
+    <div class="tile"><b>Token（詞元）</b><p>模型處理文字的基本單位，可能是字、詞、標點或子詞片段。</p></div>
+    <div class="tile"><b>Tokenizer（分詞器）</b><p>依模型規則把文字切分並轉成 token 序列。</p></div>
+    <div class="tile"><b>Embedding（嵌入）</b><p>把 token 轉成數值向量，作為模型運算的表示。</p></div>
+   </div>
+   <p class="small">注意：一個單字不一定等於一個 token；不同模型可能使用不同 tokenizer。</p>
+  </section>
+  <section class="slide">
+   <div class="kicker">03｜核心架構</div><h2>Transformer：參考上下文</h2>
+   <p>Transformer 是許多現代 LLM 使用的重要神經網路架構。它的核心機制之一是自注意力（Self-attention）。</p>
+   <div class="callout">自注意力讓模型在處理某個 token 時，也能參考序列中其他 token 的資訊，依相關程度整合上下文。</div>
+   <div class="grid">
+    <div class="tile"><b>例子 A</b><p>「蘋果放在桌上」——蘋果指水果。</p></div>
+    <div class="tile"><b>例子 B</b><p>「我用蘋果手機」——蘋果指品牌。</p></div>
+   </div>
+   <p>Encoder 與 Decoder 是 Transformer 常見元件，但不同模型可能採用不同組合；不是每個模型都有兩者。</p>
+  </section>
+  <section class="slide">
+   <div class="kicker">04｜模型如何學習</div><h2>預訓練：從大量例子學模式</h2>
+   <p>預訓練（Pretraining）是先使用大量資料訓練模型，調整參數，讓模型逐漸學到語言中的規律。</p>
+   <div class="flow"><span>訓練資料</span><i>→</i><span>模型預測</span><i>→</i><span>計算誤差</span><i>→</i><span>調整參數</span></div>
+   <p>對許多自回歸語言模型而言，常見訓練目標是根據前文預測下一個 token。不過，不同模型可能使用不同訓練目標。</p>
+   <div class="callout">訓練是建立模型能力的過程；一般使用者輸入問題後得到回答，則屬於推論／生成。</div>
+  </section>
+  <section class="slide">
+   <div class="kicker">05｜模型如何回答</div><h2>逐步生成文字</h2>
+   <p>使用者送出提示後，模型根據目前上下文計算下一個 token 的可能性，選出或抽樣 token，再把它加入上下文，重複進行。</p>
+   <div class="flow"><span>提示</span><i>→</i><span>預測 token</span><i>→</i><span>加入上下文</span><i>→</i><span>繼續預測</span></div>
+   <div class="callout">可以把它想成逐步接龍：每次產生一小段，再以目前內容為基礎繼續生成，直到符合停止條件。</div>
+   <p class="small">這是概念簡化；實際結果也會受到解碼策略與系統設定影響。</p>
+  </section>
+  <section class="slide">
+   <div class="kicker">06｜調整模型與使用方式</div><h2>微調和提示詞有什麼不同？</h2>
+   <div class="grid">
+    <div class="tile"><b>提示詞設計</b><p>透過指令、背景與範例，引導模型產生較符合需求的輸出；通常不更新模型參數。</p></div>
+    <div class="tile"><b>微調（Fine-tuning）</b><p>使用特定資料進一步訓練既有模型，調整參數，使它更適合特定任務。</p></div>
+    <div class="tile"><b>蒸餾（Distillation）</b><p>利用較大型模型提供的輸出或知識訓練較小模型，在成本、速度與表現間取捨。</p></div>
+   </div>
+  </section>
+  <section class="slide">
+   <div class="kicker">07｜能力與限制</div><h2>為什麼不能完全相信 LLM？</h2>
+   <div class="grid">
+    <div class="tile"><b>幻覺</b><p>可能產生看似合理、實際卻錯誤或缺乏依據的內容。</p></div>
+    <div class="tile"><b>偏誤</b><p>可能反映訓練資料中的偏見或不平衡。</p></div>
+    <div class="tile"><b>時效性</b><p>模型不一定掌握最新資訊，需確認資料日期。</p></div>
+    <div class="tile"><b>資源成本</b><p>訓練與推論都可能需要大量運算資源。</p></div>
+   </div>
+   <div class="callout">重要提醒：回答流暢不等於事實正確。重要資訊應回到可靠來源查證。</div>
+  </section>
+  <section class="slide">
+   <div class="kicker">08｜負責任使用</div><h2>使用 LLM 的四個好習慣</h2>
+   <ul>
+    <li>把模型當成協助整理與思考的工具，而不是唯一權威。</li>
+    <li>重要數據、日期、人物與研究結論要查原始來源。</li>
+    <li>提供清楚的背景與限制，讓問題更具體。</li>
+    <li>避免輸入不必要的個人資料或機密內容。</li>
+   </ul>
+   <div class="callout">好的使用方式不是盲目相信 AI，而是善用它的效率，同時保留自己的判斷。</div>
+  </section>
+  <section class="slide">
+   <div class="kicker">09｜重點回顧</div><h2>今天學到什麼？</h2>
+   <div class="grid">
+    <div class="tile"><b>LLM</b><p>依據上下文預測 token 序列。</p></div>
+    <div class="tile"><b>Token／Embedding</b><p>文字切分與數值表示。</p></div>
+    <div class="tile"><b>Transformer</b><p>透過自注意力整合上下文。</p></div>
+    <div class="tile"><b>訓練／生成</b><p>建立模型能力與使用模型回答是不同階段。</p></div>
+   </div>
+   <p class="lead">理解原理，也要理解限制。</p>
+  </section>
+  <section class="slide">
+   <div class="kicker">參考資料</div><h2>延伸閱讀與資料來源</h2>
+   <ul class="small">
+    <li><a href="https://developers.google.com/machine-learning/crash-course/llm?hl=zh-TW" target="_blank" rel="noopener">Google：Introduction to Large Language Models</a></li>
+    <li><a href="https://developers.google.com/machine-learning/crash-course/llm/transformers" target="_blank" rel="noopener">Google：LLMs: What's a large language model?</a></li>
+    <li><a href="https://developers.google.com/machine-learning/glossary/" target="_blank" rel="noopener">Google：Machine Learning Glossary</a></li>
+    <li><a href="https://huggingface.co/learn/llm-course/chapter1/1" target="_blank" rel="noopener">Hugging Face：LLM Course</a></li>
+    <li><a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">Vaswani et al. (2017)：Attention Is All You Need</a></li>
+    <li><a href="https://openai.com/index/why-language-models-hallucinate/" target="_blank" rel="noopener">OpenAI：Why language models hallucinate</a></li>
+   </ul>
+   <p class="small">本簡報依本專案 Wiki 摘要整理；來源摘要與使用提醒請見 sources/。</p>
+  </section>
+ </main>
+ <div class="footer">
+  <button id="prev" onclick="move(-1)">← 上一頁</button>
+  <span id="count">1 / 11</span>
+  <button id="next" onclick="move(1)">下一頁 →</button>
+ </div>
+</div>
+<script>
+const slides=[...document.querySelectorAll('.slide')];let current=0;
+function show(){slides.forEach((s,i)=>s.classList.toggle('active',i===current));document.getElementById('count').textContent=`${current+1} / ${slides.length}`;document.getElementById('bar').style.width=`${(current+1)/slides.length*100}%`;document.getElementById('prev').disabled=current===0;document.getElementById('next').disabled=current===slides.length-1}
+function move(d){current=Math.max(0,Math.min(slides.length-1,current+d));show()}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();move(1)}if(e.key==='ArrowLeft'){e.preventDefault();move(-1)}});
+show();
+</script>
+</body></html>
